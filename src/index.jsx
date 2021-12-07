@@ -132,27 +132,41 @@ import {
 import "./index.css";
 import { BrowserRouter, Routes, Route, Link, Outlet } from "react-router-dom";
 
+export const PEOPLE_NAME_FRAGMENT = gql`
+  fragment PeopleName on Person {
+    id
+    name
+  }
+`;
+
+export const PEOPLE_NAME_AGE_FRAGMENT = gql`
+  fragment PeopleNameAge on Person {
+    id
+    name
+    age
+    preference {
+      like
+      dislike
+    }
+  }
+`;
+
 const ALL_PEOPLE_NAME = gql`
   query AllPeople {
     people {
-      id
-      name
+      ...PeopleName
     }
   }
+  ${PEOPLE_NAME_FRAGMENT}
 `;
 
 const ALL_PEOPLE_NAME_AGE = gql`
   query AllPeople {
     people {
-      id
-      name
-      age
-      preference {
-        like
-        dislike
-      }
+      ...PeopleNameAge
     }
   }
+  ${PEOPLE_NAME_AGE_FRAGMENT}
 `;
 
 const ADD_PERSON = gql`
@@ -246,6 +260,7 @@ function AllPeopleNameAge() {
     // nextFetchPolicy: "cache-and-network",
   });
 
+  console.log(allPeopeNameAgeData);
 
   return (
     <main>
@@ -259,7 +274,8 @@ function AllPeopleNameAge() {
         <ul>
           {allPeopeNameAgeData?.people.map((person) => (
             <li key={person.id}>
-              {person.name} - {person.age} - {person.preference.like} - {person.preference.dislike}
+              {person.name} - {person.age} - {person.preference.like} -{" "}
+              {person.preference.dislike}
             </li>
           ))}
         </ul>
