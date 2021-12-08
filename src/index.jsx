@@ -32,8 +32,8 @@ const peopleData = [
     name: "John Smith",
     age: 25,
     preference: {
-      like: "food",
-      dislike: "car",
+      like: "cat",
+      dislike: "dog",
     },
   },
   {
@@ -41,7 +41,7 @@ const peopleData = [
     name: "Sara Smith",
     age: 30,
     preference: {
-      like: "car",
+      like: "lion",
       dislike: "apple",
     },
   },
@@ -51,7 +51,7 @@ const peopleData = [
     age: 41,
     preference: {
       like: "computer",
-      dislike: "tree",
+      dislike: "swimming",
     },
   },
 ];
@@ -61,35 +61,21 @@ const QueryType = new GraphQLObjectType({
   fields: {
     people: {
       type: new GraphQLList(PersonType),
-      resolve: () => peopleData,
-    },
-  },
-});
-
-const MutationType = new GraphQLObjectType({
-  name: "Mutation",
-  fields: {
-    addPerson: {
-      type: PersonType,
       args: {
         name: { type: GraphQLString },
-        age: { type: GraphQLInt },
       },
-      resolve: function (_, { name, age }) {
-        const person = {
-          id: peopleData[peopleData.length - 1].id + 1,
-          name,
-          age,
-        };
-
-        peopleData.push(person);
-        return person;
+      resolve: (_, { name }) => {
+        if (name) {
+          return peopleData.filter((p) => p.name.includes(name));
+        } else {
+          return peopleData;
+        }
       },
     },
   },
 });
 
-const schema = new GraphQLSchema({ query: QueryType, mutation: MutationType });
+const schema = new GraphQLSchema({ query: QueryType });
 
 /*** LINK ***/
 import { graphql, print } from "graphql";
@@ -118,7 +104,7 @@ const link = new ApolloLink((operation) => {
 });
 
 /*** APP ***/
-import React, { useState } from "react";
+import React from "react";
 import { render } from "react-dom";
 import {
   ApolloClient,
@@ -126,21 +112,19 @@ import {
   InMemoryCache,
   gql,
   useQuery,
-  useLazyQuery,
-  useMutation,
 } from "@apollo/client";
 import "./index.css";
 import { BrowserRouter, Routes, Route, Link, Outlet } from "react-router-dom";
 
-export const PEOPLE_NAME_FRAGMENT = gql`
-  fragment PeopleName on Person {
+export const PEOPLE_NAME_ONLY_FRAGMENT = gql`
+  fragment PeopleNameOnly on Person {
     id
     name
   }
 `;
 
-export const PEOPLE_NAME_AGE_FRAGMENT = gql`
-  fragment PeopleNameAge on Person {
+export const PEOPLE_ALL_FRAGMENT = gql`
+  fragment PeopleAll on Person {
     id
     name
     age
@@ -151,152 +135,116 @@ export const PEOPLE_NAME_AGE_FRAGMENT = gql`
   }
 `;
 
-const ALL_PEOPLE_NAME = gql`
-  query AllPeople {
-    people {
-      ...PeopleName
+const GET_PEOPLE_NAME_ONLY = gql`
+  query GetPeople($name: String) {
+    people(name: $name) {
+      ...PeopleNameOnly
     }
   }
-  ${PEOPLE_NAME_FRAGMENT}
+  ${PEOPLE_NAME_ONLY_FRAGMENT}
 `;
 
-const ALL_PEOPLE_NAME_AGE = gql`
-  query AllPeople {
-    people {
-      ...PeopleNameAge
+const GET_PEOPLE = gql`
+  query GetPeople($name: String) {
+    people(name: $name) {
+      ...PeopleAll
     }
   }
-  ${PEOPLE_NAME_AGE_FRAGMENT}
+  ${PEOPLE_ALL_FRAGMENT}
 `;
 
-const ADD_PERSON = gql`
-  mutation AddPerson($name: String, $age: Int) {
-    addPerson(name: $name, age: $age) {
-      id
-      name
-      age
-    }
-  }
-`;
-
-function AllPeopleName() {
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const { loading: allPeopleNameLoading, data: allPeopeNameData } = useQuery(
-    ALL_PEOPLE_NAME,
-    {
-      fetchPolicy: "network-only",
-      nextFetchPolicy: "cache-and-network",
-    }
-  );
-
-  const [addPerson] = useMutation(ADD_PERSON, {
-    update: (cache, { data: { addPerson: addPersonData } }) => {
-      const peopleResult = cache.readQuery({ query: ALL_PEOPLE_NAME });
-
-      cache.writeQuery({
-        query: ALL_PEOPLE_NAME,
-        data: {
-          ...peopleResult,
-          people: [...peopleResult.people, addPersonData],
-        },
-      });
+function Home() {
+  const { loading, data, error } = useQuery(GET_PEOPLE_NAME_ONLY, {
+    fetchPolicy: "network-only",
+    nextFetchPolicy: "cache-and-network",
+    variables: {
+      name: "John",
     },
   });
 
   return (
-    <main>
-      <h1>Apollo Client Issue Reproduction</h1>
-      <p>
-        This application can be used to demonstrate an error in Apollo Client.
-      </p>
-      {/* <div className="add-person">
-        <label htmlFor="name">Name</label>
-        <input
-          type="text"
-          name="name"
-          value={name}
-          required
-          onChange={(evt) => setName(evt.target.value)}
-        />
-        <label htmlFor="age">Age</label>
-        <input
-          type="number"
-          name="age"
-          value={age}
-          required
-          onChange={(evt) => setAge(evt.target.value)}
-        />
-        <button
-          onClick={() => {
-            if (name && age) {
-              addPerson({ variables: { name, age: parseInt(age) } });
-              setName("");
-              setAge("");
-            }
-          }}
-        >
-          Add person
-        </button>
-      </div> */}
-
-      <h2>All people name</h2>
-      {allPeopleNameLoading ? (
+    <>
+      <h2>People name includes John</h2>
+      {loading ? (
         <p>Loading…</p>
       ) : (
         <ul>
-          {allPeopeNameData?.people.map((person) => (
+          {data?.people.map((person) => (
             <li key={person.id}>{person.name}</li>
           ))}
         </ul>
       )}
-    </main>
+    </>
   );
 }
 
-function AllPeopleNameAge() {
-  const { data: allPeopeNameAgeData } = useQuery(ALL_PEOPLE_NAME_AGE, {
+function PeopleAll() {
+  const [name, setName] = React.useState("Sara");
+  const { loading, data } = useQuery(GET_PEOPLE, {
     fetchPolicy: "cache-and-network",
     // nextFetchPolicy: "cache-and-network",
+    variables: {
+      name,
+    },
   });
 
-  console.log(allPeopeNameAgeData);
+  function renderPreference({ like, dislike }) {
+    return `like ${like} and dislike ${dislike}`;
+  }
 
   return (
-    <main>
-      <h1>Apollo Client Issue Reproduction</h1>
-      <p>
-        This application can be used to demonstrate an error in Apollo Client.
-      </p>
-
-      <h2>All people name age</h2>
-      {
+    <>
+      <h2>People</h2>
+      <button
+        disabled={name === "Sara"}
+        type="button"
+        onClick={() => {
+          setName("Sara");
+        }}
+      >
+        Name includes Sara
+      </button>
+      <button
+        disabled={name === "John"}
+        type="button"
+        onClick={() => {
+          setName("John");
+        }}
+      >
+        Name includes John
+      </button>
+      {loading ? (
+        <p>Loading…</p>
+      ) : (
         <ul>
-          {allPeopeNameAgeData?.people.map((person) => (
+          {data?.people.map((person) => (
             <li key={person.id}>
-              {person.name} - {person.age} - {person.preference.like} -{" "}
-              {person.preference.dislike}
+              {person.name} ({person.age}),{" "}
+              {renderPreference(person.preference)}
             </li>
           ))}
         </ul>
-      }
-    </main>
+      )}
+    </>
   );
 }
 
 function App() {
   return (
-    <div>
-      <h1>Menu</h1>
+    <main>
+      <h1>Apollo Client Issue Reproduction</h1>
+      <p>
+        This application can be used to demonstrate an error in Apollo Client.
+      </p>
       <nav>
-        <Link to="/">Home</Link> |{" "}
-        <Link to="/allPeopleNameAge">All people name age</Link>
+        <Link to="/">People name only</Link> |{" "}
+        <Link to="/peopleAll">People</Link>
       </nav>
       <Routes>
-        <Route path="/" element={<AllPeopleName />} />
-        <Route path="allPeopleNameAge" element={<AllPeopleNameAge />} />
+        <Route path="/" element={<Home />} />
+        <Route path="peopleAll" element={<PeopleAll />} />
       </Routes>
-    </div>
+    </main>
   );
 }
 
