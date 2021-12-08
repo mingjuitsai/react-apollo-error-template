@@ -54,6 +54,42 @@ const peopleData = [
       dislike: "swimming",
     },
   },
+  {
+    id: 4,
+    name: "John One",
+    age: 55,
+    preference: {
+      like: "swimming",
+      dislike: "computer",
+    },
+  },
+  {
+    id: 5,
+    name: "John Two",
+    age: 15,
+    preference: {
+      like: "dog",
+      dislike: "bird",
+    },
+  },
+  {
+    id: 6,
+    name: "John Three",
+    age: 14,
+    preference: {
+      like: "snake",
+      dislike: "dog",
+    },
+  },
+  {
+    id: 7,
+    name: "John Four",
+    age: 44,
+    preference: {
+      like: "dog",
+      dislike: "swimming",
+    },
+  },
 ];
 
 const QueryType = new GraphQLObjectType({
@@ -63,13 +99,20 @@ const QueryType = new GraphQLObjectType({
       type: new GraphQLList(PersonType),
       args: {
         name: { type: GraphQLString },
+        like: { type: GraphQLString },
+        limit: { type: GraphQLInt },
       },
-      resolve: (_, { name }) => {
+      resolve: (_, { name, like, limit }) => {
+        let data = peopleData;
+
         if (name) {
-          return peopleData.filter((p) => p.name.includes(name));
-        } else {
-          return peopleData;
+          data = data.filter((p) => p.name.includes(name));
         }
+        if (like) {
+          data = data.filter((p) => p.preference.like === like);
+        }
+
+        return data.slice(0, limit);
       },
     },
   },
@@ -136,8 +179,8 @@ export const PEOPLE_ALL_FRAGMENT = gql`
 `;
 
 const GET_PEOPLE_NAME_ONLY = gql`
-  query GetPeople($name: String) {
-    people(name: $name) {
+  query GetPeople($name: String, $like: String, $limit: Int) {
+    people(name: $name, like: $like, limit: $limit) {
       ...PeopleNameOnly
     }
   }
@@ -145,8 +188,8 @@ const GET_PEOPLE_NAME_ONLY = gql`
 `;
 
 const GET_PEOPLE = gql`
-  query GetPeople($name: String) {
-    people(name: $name) {
+  query GetPeople($name: String, $like: String, $limit: Int) {
+    people(name: $name, like: $like, limit: $limit) {
       ...PeopleAll
     }
   }
@@ -159,6 +202,8 @@ function Home() {
     nextFetchPolicy: "cache-and-network",
     variables: {
       name: "John",
+      limit: 5,
+      like: "dog",
     },
   });
 
@@ -185,6 +230,8 @@ function PeopleAll() {
     nextFetchPolicy: "cache-and-network",
     variables: {
       name,
+      limit: 5,
+      like: "dog",
     },
   });
 
