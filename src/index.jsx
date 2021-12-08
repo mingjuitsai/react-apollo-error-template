@@ -114,7 +114,7 @@ import {
   useQuery,
 } from "@apollo/client";
 import "./index.css";
-import { BrowserRouter, Routes, Route, Link, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 export const PEOPLE_NAME_ONLY_FRAGMENT = gql`
   fragment PeopleNameOnly on Person {
@@ -154,7 +154,7 @@ const GET_PEOPLE = gql`
 `;
 
 function Home() {
-  const { loading, data, error } = useQuery(GET_PEOPLE_NAME_ONLY, {
+  const { loading, data } = useQuery(GET_PEOPLE_NAME_ONLY, {
     fetchPolicy: "network-only",
     nextFetchPolicy: "cache-and-network",
     variables: {
@@ -181,8 +181,8 @@ function Home() {
 function PeopleAll() {
   const [name, setName] = React.useState("Sara");
   const { loading, data } = useQuery(GET_PEOPLE, {
-    fetchPolicy: "cache-and-network",
-    // nextFetchPolicy: "cache-and-network",
+    fetchPolicy: "network-only",
+    nextFetchPolicy: "cache-and-network",
     variables: {
       name,
     },
@@ -213,18 +213,13 @@ function PeopleAll() {
       >
         Name includes John
       </button>
-      {loading ? (
-        <p>Loading…</p>
-      ) : (
-        <ul>
-          {data?.people.map((person) => (
-            <li key={person.id}>
-              {person.name} ({person.age}),{" "}
-              {renderPreference(person.preference)}
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul>
+        {data?.people.map((person) => (
+          <li key={person.id}>
+            {person.name} ({person.age}), {renderPreference(person.preference)}
+          </li>
+        ))}
+      </ul>
     </>
   );
 }
