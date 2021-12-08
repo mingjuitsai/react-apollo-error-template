@@ -208,7 +208,7 @@ function Home() {
 
   return (
     <>
-      <h2>People like dog, name includes John</h2>
+      <h2>People name includes John</h2>
       {loading ? (
         <p>Loading…</p>
       ) : (
@@ -227,7 +227,6 @@ function PeopleAll() {
   const { loading, data } = useQuery(GET_PEOPLE, {
     fetchPolicy: "network-only",
     nextFetchPolicy: "cache-and-network",
-    notifyOnNetworkStatusChange: true,
     variables: {
       name,
     },
@@ -239,7 +238,7 @@ function PeopleAll() {
 
   return (
     <>
-      <h2>People like dog</h2>
+      <h2>People</h2>
       <button
         disabled={name === "Sara"}
         type="button"
