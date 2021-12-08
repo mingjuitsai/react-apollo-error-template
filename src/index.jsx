@@ -179,8 +179,8 @@ export const PEOPLE_ALL_FRAGMENT = gql`
 `;
 
 const GET_PEOPLE_NAME_ONLY = gql`
-  query GetPeople($name: String, $like: String, $limit: Int) {
-    people(name: $name, like: $like, limit: $limit) {
+  query GetPeople($name: String, $like: String) {
+    people(name: $name, like: $like) {
       ...PeopleNameOnly
     }
   }
@@ -200,16 +200,15 @@ function Home() {
   const { loading, data } = useQuery(GET_PEOPLE_NAME_ONLY, {
     fetchPolicy: "network-only",
     nextFetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
     variables: {
       name: "John",
-      limit: 5,
-      like: "dog",
     },
   });
 
   return (
     <>
-      <h2>People name includes John</h2>
+      <h2>People like dog, name includes John</h2>
       {loading ? (
         <p>Loading…</p>
       ) : (
@@ -228,10 +227,9 @@ function PeopleAll() {
   const { loading, data } = useQuery(GET_PEOPLE, {
     fetchPolicy: "network-only",
     nextFetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
     variables: {
       name,
-      limit: 5,
-      like: "dog",
     },
   });
 
@@ -241,7 +239,7 @@ function PeopleAll() {
 
   return (
     <>
-      <h2>People</h2>
+      <h2>People like dog</h2>
       <button
         disabled={name === "Sara"}
         type="button"
