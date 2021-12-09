@@ -199,6 +199,7 @@ const GET_PEOPLE = gql`
 function Home() {
   const { loading, data } = useQuery(GET_PEOPLE_NAME_ONLY, {
     fetchPolicy: "cache-and-network",
+    returnPartialData: false,
     notifyOnNetworkStatusChange: true,
     variables: {
       name: "John",
@@ -225,6 +226,7 @@ function PeopleAll() {
   const [name, setName] = React.useState("Sara");
   const { loading, data } = useQuery(GET_PEOPLE, {
     fetchPolicy: "cache-and-network",
+    returnPartialData: false,
     notifyOnNetworkStatusChange: true,
     variables: {
       name,
