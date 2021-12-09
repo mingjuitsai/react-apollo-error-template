@@ -157,48 +157,33 @@ import {
   useQuery,
 } from "@apollo/client";
 import "./index.css";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-
-export const PEOPLE_NAME_ONLY_FRAGMENT = gql`
-  fragment PeopleNameOnly on Person {
-    id
-    name
-  }
-`;
-
-export const PEOPLE_ALL_FRAGMENT = gql`
-  fragment PeopleAll on Person {
-    id
-    name
-    age
-    preference {
-      like
-      dislike
-    }
-  }
-`;
 
 const GET_PEOPLE_NAME_ONLY = gql`
   query GetPeople($name: String, $like: String) {
     people(name: $name, like: $like) {
-      ...PeopleNameOnly
+      id
+      name
     }
   }
-  ${PEOPLE_NAME_ONLY_FRAGMENT}
 `;
 
 const GET_PEOPLE = gql`
   query GetPeople($name: String, $like: String, $limit: Int) {
     people(name: $name, like: $like, limit: $limit) {
-      ...PeopleAll
+      id
+      name
+      age
+      preference {
+        like
+        dislike
+      }
     }
   }
-  ${PEOPLE_ALL_FRAGMENT}
 `;
 
-function Home() {
-  const { loading, data } = useQuery(GET_PEOPLE_NAME_ONLY, {
-    fetchPolicy: "cache-and-network",
+function PeopleNameOnly() {
+  const { data } = useQuery(GET_PEOPLE_NAME_ONLY, {
+    fetchPolicy: "network-only",
     returnPartialData: false,
     notifyOnNetworkStatusChange: true,
     variables: {
@@ -207,25 +192,19 @@ function Home() {
   });
 
   return (
-    <>
-      <h2>People name includes John</h2>
-      {loading ? (
-        <p>Loading…</p>
-      ) : (
-        <ul>
-          {data?.people.map((person) => (
-            <li key={person.id}>{person.name}</li>
-          ))}
-        </ul>
-      )}
-    </>
+    <ul>
+      {data?.people.map((person) => (
+        <li key={person.id}>{person.name}</li>
+      ))}
+    </ul>
   );
 }
 
-function PeopleAll() {
+function People() {
   const [name, setName] = React.useState("Sara");
-  const { loading, data } = useQuery(GET_PEOPLE, {
-    fetchPolicy: "cache-and-network",
+
+  const { data } = useQuery(GET_PEOPLE, {
+    fetchPolicy: "network-only",
     returnPartialData: false,
     notifyOnNetworkStatusChange: true,
     variables: {
@@ -239,25 +218,26 @@ function PeopleAll() {
 
   return (
     <>
-      <h2>People</h2>
-      <button
-        disabled={name === "Sara"}
-        type="button"
-        onClick={() => {
-          setName("Sara");
-        }}
-      >
-        Name includes Sara
-      </button>
-      <button
-        disabled={name === "John"}
-        type="button"
-        onClick={() => {
-          setName("John");
-        }}
-      >
-        Name includes John
-      </button>
+      <aside>
+        <button
+          type="button"
+          disabled={name === "Sara"}
+          onClick={() => {
+            setName("Sara");
+          }}
+        >
+          name includes Sara
+        </button>
+        <button
+          type="button"
+          disabled={name === "John"}
+          onClick={() => {
+            setName("John");
+          }}
+        >
+          name includes John
+        </button>
+      </aside>
       <ul>
         {data?.people.map((person) => (
           <li key={person.id}>
@@ -269,21 +249,39 @@ function PeopleAll() {
   );
 }
 
+function PeopleList() {
+  const [page, setPage] = React.useState(0);
+  return (
+    <>
+      <button
+        type="button"
+        disabled={page === 0}
+        onClick={() => {
+          setPage(0);
+        }}
+      >
+        Page 1
+      </button>
+      <button
+        type="button"
+        disabled={page === 1}
+        onClick={() => {
+          setPage(1);
+        }}
+      >
+        Page 2
+      </button>
+      {page === 0 && <PeopleNameOnly />}
+      {page === 1 && <People />}
+    </>
+  );
+}
+
 function App() {
   return (
     <main>
       <h1>Apollo Client Issue Reproduction</h1>
-      <p>
-        This application can be used to demonstrate an error in Apollo Client.
-      </p>
-      <nav>
-        <Link to="/">People name only</Link> |{" "}
-        <Link to="/peopleAll">People</Link>
-      </nav>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="peopleAll" element={<PeopleAll />} />
-      </Routes>
+      <PeopleList />
     </main>
   );
 }
@@ -295,9 +293,7 @@ const client = new ApolloClient({
 
 render(
   <ApolloProvider client={client}>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <App />
   </ApolloProvider>,
   document.getElementById("root")
 );
