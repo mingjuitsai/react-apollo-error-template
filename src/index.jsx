@@ -38,7 +38,7 @@ const peopleData = [
   },
   {
     id: 2,
-    name: "Sara Smith",
+    name: "Sarah Smith",
     age: 30,
     preference: {
       like: "lion",
@@ -201,7 +201,7 @@ function PeopleNameOnly() {
 }
 
 function People() {
-  const [name, setName] = React.useState("Sara");
+  const [name, setName] = React.useState("Sarah");
 
   const { data } = useQuery(GET_PEOPLE, {
     fetchPolicy: "network-only",
@@ -221,12 +221,12 @@ function People() {
       <aside>
         <button
           type="button"
-          disabled={name === "Sara"}
+          disabled={name === "Sarah"}
           onClick={() => {
-            setName("Sara");
+            setName("Sarah");
           }}
         >
-          name includes Sara
+          name includes Sarah
         </button>
         <button
           type="button"
