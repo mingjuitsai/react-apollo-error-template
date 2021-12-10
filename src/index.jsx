@@ -241,7 +241,7 @@ function People() {
       <ul>
         {data?.people.map((person) => (
           <li key={person.id}>
-            {person.name} ({person.age}), {renderPreference(person.preference)}
+            {person.name} ({person.age})
           </li>
         ))}
       </ul>
