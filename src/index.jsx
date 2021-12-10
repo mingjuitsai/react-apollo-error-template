@@ -183,7 +183,7 @@ const GET_PEOPLE = gql`
 
 function PeopleNameOnly() {
   const { data } = useQuery(GET_PEOPLE_NAME_ONLY, {
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
     returnPartialData: false,
     notifyOnNetworkStatusChange: true,
     variables: {
@@ -204,7 +204,7 @@ function People() {
   const [name, setName] = React.useState("Sarah");
 
   const { data } = useQuery(GET_PEOPLE, {
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
     returnPartialData: false,
     notifyOnNetworkStatusChange: true,
     variables: {
@@ -241,7 +241,7 @@ function People() {
       <ul>
         {data?.people.map((person) => (
           <li key={person.id}>
-            {person.name} ({person.age})
+            {person.name} ({person.age}) - {renderPreference(person.preference)}
           </li>
         ))}
       </ul>
